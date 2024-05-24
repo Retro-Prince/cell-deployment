@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { sendAnalysis } from "@/lib/actions/action";
 import { useFormStatus } from "react-dom";
 import clsx from "clsx";
-import { calculateStatus } from "@/lib/utils";
+import { calculateStatus, evaluatePerformance } from "@/lib/utils";
 
 interface LoadProp {
   setResult: React.Dispatch<React.SetStateAction<string | null>>;
@@ -30,7 +30,7 @@ const ModalLoad = ({ setResult, start }: LoadProp) => {
   const inference = data?.get("inference");
 
   if (pending != true && start == true) {
-    setResult(calculateStatus(rsp, rsq, inference));
+    setResult(evaluatePerformance(rsp, rsq, inference));
   }
 
   return (
@@ -59,11 +59,23 @@ const InferenceCard = ({
   title: string;
   values: Values;
 }) => {
-  const result = calculateStatus(values.rsrp, values.rsrq, values.inference);
+  const result = evaluatePerformance(
+    values.rsrp,
+    values.rsrq,
+    values.inference
+  );
+
+  let suggestion: String = "";
+
+  if (result == "Poor" || result == "Fair") {
+    suggestion = "The location fits conditions for deployment";
+  } else {
+    suggestion = "The location doesn't fit conditions for deployment";
+  }
 
   return (
     <div className=" transition-all duration-200 ease-linear absolute w-[24rem] bottom-10 right-10 rounded-xl p-6 bg-white shadow-2xl">
-      <h1 className=" text-xl font-semibold">Predicted Inference:</h1>
+      <h1 className=" text-xl font-semibold">{suggestion}</h1>
       <br />
       <p>The inference quality of the following coordinates is</p>
       <br />
@@ -80,7 +92,7 @@ const InferenceCard = ({
       >
         <SignalHigh size={42} />
         <p className=" text-xl font-semibold capitalize">
-          {calculateStatus(values.rsrp, values.rsrq, values.inference)}
+          {evaluatePerformance(values.rsrp, values.rsrq, values.inference)}
         </p>
       </div>
     </div>
